@@ -1,0 +1,13 @@
+FromId,ToId,Label
+Janos,Bela,reportsTo
+Anna,Bela,reportsTo
+Peter,Anna,reportsTo
+Janos,CSharp,hasSkill
+Janos,SQL,hasSkill
+Anna,Azure,hasSkill
+Anna,SQL,hasSkill
+Peter,CSharp,hasSkill
+Peter,Python,hasSkill
+Peter,Docker,hasSkill
+Bela,CSharp,hasSkill
+Bela,Azure,hasSkill

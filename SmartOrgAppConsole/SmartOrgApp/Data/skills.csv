@@ -1,0 +1,6 @@
+Id,Name,Level,PartitionKey
+CSharp,C# Development,Expert,org
+Azure,Azure Cloud,Intermediate,org
+SQL,SQL Database,Advanced,org
+Python,Python Programming,Intermediate,org
+Docker,Docker Containers,Beginner,org

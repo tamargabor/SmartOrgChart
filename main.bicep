@@ -1,31 +1,59 @@
-// main.bicep
-param location string = resourceGroup().location
-param accountName string = 'smart-org-graph-${uniqueString(resourceGroup().id)}' // Egyedi név generálása
+// main.bicep - Cost Optimized for Dev/Test
+param location string = 'northeurope' 
+param accountName string = 'smart-org-graph-${uniqueString(resourceGroup().id)}'
 param databaseName string = 'OrgDatabase'
 param graphName string = 'OrgGraph'
 
-// 1. Create the Cosmos DB Account (with Gremlin API)
+// 1. Cosmos DB Account (Cost Optimized)
 resource cosmosAccount 'Microsoft.DocumentDB/databaseAccounts@2023-11-15' = {
   name: accountName
   location: location
   kind: 'GlobalDocumentDB'
+  tags: {
+    Environment: 'Dev'
+    Project: 'SmartOrgChart'
+    CostCenter: 'FreeTier'
+  }
   properties: {
+    // --- COST OPTIMIZATION START ---
     databaseAccountOfferType: 'Standard'
+    enableFreeTier: true // The Holy Grail: Free 1000 RU/s + 25GB
+    
+    // Disable the expensive analytical storage
+    enableAnalyticalStorage: false 
+    
+    // No need for multi-region writes (Multi-master write is expensive)
+    enableMultipleWriteLocations: false 
+
+    // Backup strategy: 'Periodic' is the cheapest/default option
+    backupPolicy: {
+      type: 'Periodic'
+      periodicModeProperties: {
+        backupIntervalInMinutes: 1440 // Backup every 24 hours
+        backupRetentionIntervalInHours: 48 // Retain for 48 hours
+      }
+    }
+    // --- COST OPTIMIZATION END ---
+
     locations: [
       {
         locationName: location
         failoverPriority: 0
+        isZoneRedundant: false // DISABLED: No zone replication ($$$ savings)
       }
     ]
     capabilities: [
       {
-        name: 'EnableGremlin' // For graph functionality
+        name: 'EnableGremlin' // Enable graph engine
       }
     ]
+    consistencyPolicy: {
+      defaultConsistencyLevel: 'Session' // Best balance for development
+    }
   }
 }
 
-// 2. Create the Database inside the account
+// 2. Database
 resource database 'Microsoft.DocumentDB/databaseAccounts/gremlinDatabases@2023-11-15' = {
   parent: cosmosAccount
   name: databaseName
@@ -36,7 +64,7 @@ resource database 'Microsoft.DocumentDB/databaseAccounts/gremlinDatabases@2023-1
   }
 }
 
-// 3. Create the Graph itself
+// 3. Graph (Container)
 resource graph 'Microsoft.DocumentDB/databaseAccounts/gremlinDatabases/graphs@2023-11-15' = {
   parent: database
   name: graphName
@@ -45,13 +73,15 @@ resource graph 'Microsoft.DocumentDB/databaseAccounts/gremlinDatabases/graphs@20
       id: graphName
       partitionKey: {
         paths: [
-          '/partitionKey' // Scaleable
+          '/partitionKey'
         ]
         kind: 'Hash'
       }
     }
     options: {
-      throughput: 400 // This is the lowest setup. Minimum cost for learning.
+      // 400 RU/s is the minimum.
+      // Since Free Tier covers up to 1000 RU/s, this costs $0.
+      throughput: 400 
     }
   }
 }

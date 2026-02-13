@@ -1,0 +1,64 @@
+name: Azure Static Web Apps CI/CD
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      # CSAK akkor induljon, ha ebben a mappában (vagy alatta) van változás
+      - 'SmartOrgAppVisual/**'
+      - '.github/workflows/**' # Érdemes meghagyni, hogy ha a workflow-t módosítod, fusson
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+    branches:
+      - main
+    paths:
+      - 'SmartOrgAppVisual/**'
+      - '.github/workflows/**'
+
+jobs:
+  build_and_deploy_job:
+    if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
+    runs-on: ubuntu-latest
+    name: Build and Deploy Job
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+          lfs: false
+          
+      - name: Build and Deploy
+        id: builddeploy
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          # A titkos token (amit a GitHub Secretbe raktál)
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          action: "upload"
+          
+          ###### ITT A LÉNYEG (MONOREPO CONFIG) ######
+          
+          # A gyökérhez képest hol van a frontend kód?
+          # FONTOS: Ellenőrizd a mappa nevét (Smart vs Samrt)!
+          app_location: "/SmartOrgAppVisual/client" 
+          
+          # A gyökérhez képest hol van a backend kód?
+          api_location: "/SmartOrgAppVisual/api"
+          
+          # Ez RELATÍV az app_location-höz képest! 
+          # Tehát: /SmartOrgAppVisual/client/dist -> ide csak "dist" kell
+          output_location: "dist" 
+          
+          ###### CONFIG VÉGE ######
+
+  close_pull_request_job:
+    if: github.event_name == 'pull_request' && github.event.action == 'closed'
+    runs-on: ubuntu-latest
+    name: Close Pull Request Job
+    steps:
+      - name: Close Pull Request
+        id: closepullrequest
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
+          action: "close"

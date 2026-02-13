@@ -85,3 +85,23 @@ resource graph 'Microsoft.DocumentDB/databaseAccounts/gremlinDatabases/graphs@20
     }
   }
 }
+
+// 4. Azure Static Web App (Frontend + API)
+resource staticWebApp 'Microsoft.Web/staticSites@2022-09-01' = {
+  name: 'smart-org-viz-${uniqueString(resourceGroup().id)}'
+  location: 'westeurope'
+  sku: {
+    name: 'Free'
+    tier: 'Free'
+  }
+  properties: {
+    repositoryUrl: 'https://github.com/tamargabor/SmartOrgChart'
+    branch: 'main'
+    provider: 'GitHub'
+    stagingEnvironmentPolicy: 'Enabled'
+    allowConfigFileUpdates: true
+  }
+}
+
+// Output: The URL of the website
+output webUrl string = staticWebApp.properties.defaultHostname

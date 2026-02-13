@@ -356,3 +356,12 @@ mono_crash.*
 # Exclude appsettings with sensitive data (uncomment if you have these)
 # appsettings.Development.json
 # appsettings.*.json
+
+# Azure Functions and Static Web Apps
+SmartOrgAppVisual/api/bin/
+SmartOrgAppVisual/api/obj/
+SmartOrgAppVisual/api/local.settings.json
+SmartOrgAppVisual/client/node_modules/
+SmartOrgAppVisual/client/dist/
+SmartOrgAppVisual/client/.vite/
+SmartOrgAppVisual/client/package-lock.json
